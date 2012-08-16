@@ -7,3 +7,12 @@ init options:
 	2. 	override methods [dragEnter,dragExit,dragOver,drop]
 	3.	regex to filter file type
 	4.	Size of file to upload
+	
+How to set up:
+Drop in refrence :
+<script type="text/javascript" src="../../Scripts/DropZone.js"></script>
+then call the plug-in, with options that you want added
+$('#dropbox').DropZone({ url: "/home/UploadFiles" });
+
+How to remove:
+ $('#dropbox').DropZone("destroy");
