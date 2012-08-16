@@ -1,14 +1,14 @@
 
 function drop(e){
     dragOver(e);
-
+    $this = $(this);
+    var options = $this.data('options', options);
     // fetch FileList object
-    var files = e.target.files || e.dataTransfer.files;
+   var files = e.dataTransfer.files;
 
     // process all File objects
     for (var i = 0, f; f = files[i]; i++) {
-       
-        UploadFile(f);
+        UploadFile(f,options.url, options.regex, options.size);
     }
 	
 }
@@ -31,34 +31,110 @@ function dragEnter(e){
 	e.target.className = (e.type == "dragover" ? "hover" : "");
 }
 
-function UploadFile(file) {
-    var data = $dropZone.data('options');
+function UploadFile(file, url, pattern, size) {
+    
+    if (size === undefined) {
+        //create a default max size
+        var size = 1000000;
+    }
+    if (pattern === undefined) {
+        //create a dauft pattern to match to
+        var pattern = /image/;
+    }
 
     var xhr = new XMLHttpRequest();
-
-    if (xhr.upload && file.type == "image/jpeg" && file.size <= 1000000) {
-        xhr.open("POST", data.options.url, true);
-        xhr.setRequestHeader("X_FILENAME", file.name);
+    
+    if (xhr.upload && file.type.match(pattern) && file.size <= size) {
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("X-File-Name", file.name);
+        xhr.setRequestHeader("X-File-Size", file.size);
+        xhr.setRequestHeader("X-File-Type", file.type);
         xhr.send(file);
     }
 }
 
-function bindEvents(dropZone){
-	dropZone.bind("dragenter", dragEnter);
-	dropZone.bind("dragexit", dragExit);
-	dropZone.bind("dragover", dragOver);
-	dropZone.bind("drop", drop);
+function bindEvents(dropZone) {
+    data = dropZone.data('options');
+    if (data.methods !== undefined) {
+        methods = data.methods;
+        if (methods.dragEnter !== undefined) {
+            dropZone.get(0).addEventListener("dragenter", methods.dragEnter, false);
+        }
+            else {
+                dropZone.get(0).addEventListener("dragenter", dragEnter, false);
+            }
+
+        if (methods.dragExit !== undefined) {
+            dropZone.get(0).addEventListener("dragexit", methods.dragExit, false);
+        }
+            else {
+                dropZone.get(0).addEventListener("dragenter", dragExit, false);
+            }
+
+        if (methods.dragnOver !== undefined) {
+            dropZone.get(0).addEventListener("dragenter", methods.dragOver, false);
+        }
+            else {
+                dropZone.get(0).addEventListener("dragenter", dragOver, false);
+            }
+
+        if (methods.drop !== undefined) {
+            dropZone.get(0).addEventListener("dragenter", methods.drop, false);
+        }
+            else {
+                dropZone.get(0).addEventListener("dragenter", drop, false);
+            }
+    }
+    else {
+        dropZone.get(0).addEventListener("dragenter", dragEnter, false);
+        dropZone.get(0).addEventListener("dragexit", dragExit, false);
+        dropZone.get(0).addEventListener("dragover", dragOver, false);
+        dropZone.get(0).addEventListener("drop", drop, false);
+    }
 }
 function unBindEvents(dropZone) {
-    dropZone.unbind("dragenter", dragEnter);
-    dropZone.unbind("dragexit", dragExit);
-    dropZone.unbind("dragover", dragOver);
-    dropZone.unbind("drop", drop);
+    data = dropZone.data('options');
+    if (data.methods !== undefined) {
+        methods = data.methods;
+        if (methods.dragEnter !== undefined) {
+            dropZone.get(0).removeEventListener("dragenter", methods.dragEnter, false);
+        }
+        else {
+            dropZone.get(0).removeEventListener("dragenter", dragEnter, false);
+        }
+
+        if (methods.dragExit !== undefined) {
+            dropZone.get(0).removeEventListener("dragexit", methods.dragExit, false);
+        }
+        else {
+            dropZone.get(0).removeEventListener("dragenter", dragExit, false);
+        }
+
+        if (methods.dragnOver !== undefined) {
+            dropZone.get(0).removeEventListener("dragenter", methods.dragOver, false);
+        }
+        else {
+            dropZone.get(0).removeEventListener("dragenter", dragOver, false);
+        }
+
+        if (methods.drop !== undefined) {
+            dropZone.get(0).removeEventListener("dragenter", methods.drop, false);
+        }
+        else {
+            dropZone.get(0).removeEventListener("dragenter", drop, false);
+        }
+    }
+    else {
+        dropZone.get(0).removeEventListener("dragenter", dragEnter, false);
+        dropZone.get(0).removeEventListener("dragexit", dragExit, false);
+        dropZone.get(0).removeEventListener("dragover", dragOver, false);
+        dropZone.get(0).removeEventListener("drop", drop, false);
+    }
 }
 (function( $ ) {
 
 var methods ={
-	//url to post data, override methods
+	//url to post data, override methods [dragEnter,dragExit,dragOver,drop], regex to filter file type, Size of file to upload
    
 	
     init: function (options) {
@@ -79,7 +155,6 @@ var methods ={
 	    unBindEvents($this);
 	    // Namespacing FTW
 	    $(window).unbind('.DropZone');
-	    data.tooltip.remove();
 	    $this.removeData('options');
 	}
 };
